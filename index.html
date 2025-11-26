@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>eBook PPIH</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <!-- VIEWPORT FIX — BIAR TIDAK NGEZOOM -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
@@ -19,22 +22,23 @@
 
     #pdf-viewer {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      max-width: 900px;
+      margin: auto;
       padding: 12px;
       box-sizing: border-box;
     }
 
+    /* RESPONSIVE CANVAS TANPA PAKSA UKURAN */
     canvas {
       background: #fff;
       display: block;
       margin: 10px 0;
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 900px;
-      width: 100%;
-      height: auto;
+
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
     }
 
     #loading {
@@ -70,6 +74,8 @@
       font-size: 15px;
       display: none;
       z-index: 10000;
+      max-width: 90%;
+      text-align: center;
     }
   </style>
 </head>
@@ -82,6 +88,7 @@
 
   <script>
     const url = "NEW Edisi Revisi 2 Panggil Aku ke Tanah Suci..pdf";
+
     pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -90,18 +97,19 @@
     const blackout = document.getElementById("blackout");
     const popup = document.getElementById("warning-popup");
 
-    // ===============================
-    //     FIX UTAMA KUALITAS PDF
-    // ===============================
+    // ==================================================
+    //     FIX RENDERING AGAR BISA RESPONSIF DI MOBILE
+    // ==================================================
     async function renderPDF() {
       const pdf = await pdfjsLib.getDocument(url).promise;
       loading.textContent = "📖 Memuat halaman...";
 
       for (let i = 1; i <= pdf.numPages; i++) {
+
         const page = await pdf.getPage(i);
 
-        // Scale tinggi agar tajam — bukan berdasarkan lebar layar.
-        const scale = 2.2;
+        // SCALE TINGGI — tapi fleksibel di layar kecil
+        const scale = 1.7;
         const viewport = page.getViewport({ scale });
 
         const canvas = document.createElement("canvas");
@@ -109,12 +117,12 @@
 
         const outputScale = window.devicePixelRatio || 1;
 
-        // Ukuran canvas REAL (berbasis pixel)
+        // Render HD (device pixel)
         canvas.width = viewport.width * outputScale;
         canvas.height = viewport.height * outputScale;
 
-        // Ukuran CSS (yang tampil) — tidak dibiarkan membesar
-        canvas.style.width = viewport.width + "px";
+        // CSS SIZE RESPONSIF
+        canvas.style.width = "100%";
         canvas.style.height = "auto";
 
         ctx.scale(outputScale, outputScale);
@@ -132,6 +140,7 @@
 
     renderPDF();
 
+    // =============== ANTI SCREENSHOT ===============
     function triggerBlackout() {
       blackout.classList.add("active");
       popup.style.display = "block";
